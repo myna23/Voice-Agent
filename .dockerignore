@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+.git/
+benchmark/samples/**/*.wav
+benchmark/samples/**/*.mp3
+benchmark/samples/**/*.m4a
+benchmark/samples/**/*.webm
+benchmark/samples/**/*.ogg
+benchmark/samples/**/*.flac
+benchmark/report.md
