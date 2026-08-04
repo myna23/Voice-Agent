@@ -6,3 +6,4 @@ openai==1.58.1
 faster-whisper==1.1.0
 requests==2.32.3
 python-dotenv==1.0.1
+jiwer==3.0.5
