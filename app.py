@@ -293,7 +293,11 @@ INTENT_TOOL = {
                 },
                 "to": {"type": ["string", "null"], "description": "Recipient name for send_money"},
                 "amount": {"type": ["number", "null"], "description": "Amount in cedis, for send_money or buy_bundle"},
-                "product": {"type": ["string", "null"], "description": "Bundle/product name for buy_bundle, e.g. '1GB data'"},
+                "product": {
+                    "type": ["string", "null"],
+                    "description": "For buy_bundle, must be exactly one of the catalog names given in the system prompt "
+                    "(e.g. a caller saying '1 gigabyte of data' or 'one gig' should map to '1gb data').",
+                },
                 "complaint_text": {"type": ["string", "null"], "description": "Summary of the issue for file_complaint"},
             },
             "required": ["intent", "to", "amount", "product", "complaint_text"],
@@ -305,6 +309,10 @@ SYSTEM_PROMPT = (
     "You classify customer-care voice requests for a mobile money/telco service. Callers often "
     "code-switch between English and Akan, Nigerian/Ghanaian Pidgin, or Swahili in the same sentence, "
     "and amounts/products are frequently said in English even in an otherwise local-language sentence. "
+    "For buy_bundle requests, the 'product' field must exactly match one of these catalog names, "
+    "however the caller phrased it (e.g. '1 gigabyte of data', 'one gig', 'a gig of data' all mean '1gb data'): "
+    + ", ".join(f"'{p}'" for p in BUNDLE_PRICES)
+    + ". If a spoken request doesn't clearly match any catalog item, leave product null rather than guessing. "
     "Always call the classify_wallet_request function with your best interpretation, even if the "
     "transcript is noisy or partially mis-transcribed."
 )
