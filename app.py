@@ -228,14 +228,34 @@ async def transcribe_local_whisper(audio_path: str) -> dict:
         return _engine_error("local_whisper", label, str(exc), start)
 
 
+MIN_AUDIO_BYTES = 3000  # a valid webm/opus clip of even ~1s is well above this
+
+
 @app.post("/api/transcribe")
 async def api_transcribe(audio: UploadFile, lang: str = Form("ak")):
     if lang not in LANGUAGES:
         lang = "ak"
     filename = audio.filename or "clip.wav"
     suffix = os.path.splitext(filename)[1] or ".wav"
+    content = await audio.read()
+
+    if len(content) < MIN_AUDIO_BYTES:
+        error = {
+            "ok": False, "transcript": "", "latency_ms": 0,
+            "error": f"Recording too short/empty ({len(content)} bytes) — record for at least 1-2 seconds and check mic permissions.",
+        }
+        return JSONResponse({
+            "engines": [
+                {"engine": "sahara", "label": "Intron Sahara", **error},
+                {"engine": "groq_whisper", "label": "Groq Whisper-large-v3", **error},
+                {"engine": "local_whisper", "label": "Local faster-whisper", **error},
+            ],
+            "primary_transcript": "",
+            "lang": lang,
+        })
+
     with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-        tmp.write(await audio.read())
+        tmp.write(content)
         tmp_path = tmp.name
 
     try:
