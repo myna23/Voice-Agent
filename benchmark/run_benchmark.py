@@ -80,7 +80,7 @@ async def run_one(path: str, lang: str) -> dict:
     results = await asyncio.gather(
         sahara_app.transcribe_sahara(path, filename, lang),
         sahara_app.transcribe_groq(path, lang),
-        sahara_app.transcribe_local_whisper(path),
+        sahara_app.transcribe_local_whisper(path, lang),
     )
     ref_path = os.path.splitext(path)[0] + ".txt"
     reference = None

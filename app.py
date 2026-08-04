@@ -212,13 +212,14 @@ async def transcribe_groq(audio_path: str, lang: str) -> dict:
         return _engine_error("groq_whisper", label, str(exc), start)
 
 
-async def transcribe_local_whisper(audio_path: str) -> dict:
+async def transcribe_local_whisper(audio_path: str, lang: str) -> dict:
     label = f"Local faster-whisper ({LOCAL_WHISPER_MODEL}, open-source, offline, not tuned for this language)"
     start = time.monotonic()
+    hint = LANGUAGES[lang]["whisper_hint"]  # same Whisper-family language codes as Groq; None left to auto-detect
     try:
         def _run():
             model = _get_local_whisper()
-            segments, _info = model.transcribe(audio_path)
+            segments, _info = model.transcribe(audio_path, language=hint)
             return " ".join(seg.text.strip() for seg in segments)
 
         transcript = await asyncio.to_thread(_run)
@@ -262,7 +263,7 @@ async def api_transcribe(audio: UploadFile, lang: str = Form("ak")):
         results = await asyncio.gather(
             transcribe_sahara(tmp_path, filename, lang),
             transcribe_groq(tmp_path, lang),
-            transcribe_local_whisper(tmp_path),
+            transcribe_local_whisper(tmp_path, lang),
         )
     finally:
         os.unlink(tmp_path)
