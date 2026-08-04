@@ -23,7 +23,7 @@ a complaint — rather than just producing a transcript.
    - **Local `faster-whisper`** — open-source, runs offline, not tuned for these languages.
 3. **Act**: the Sahara transcript goes to Groq's `llama-3.3-70b-versatile`
    (free tier, function-calling) to classify intent (`check_balance` /
-   `send_money` / `buy_bundle` / `file_complaint`) and extract slots. The
+   `send_money` / `buy_bundle` / `top_up` / `file_complaint`) and extract slots. The
    backend then **executes** it against an in-memory mock wallet.
 4. **Confirm**: a natural-language confirmation is shown, with an optional
    spoken confirmation via Sahara TTS (feature-flagged, falls back to
@@ -55,6 +55,7 @@ Try:
 - "Check my balance"
 - "Send 20 cedis to Ama" (mix in Akan/Pidgin/Swahili as you like)
 - "Buy me 1GB data"
+- "Top up my wallet with 50 cedis"
 - "I want to file a complaint about my network"
 
 `faster-whisper` downloads its model weights on first use (a few hundred MB) —

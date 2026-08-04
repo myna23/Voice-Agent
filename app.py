@@ -115,6 +115,14 @@ def check_balance():
             "message": f"Your balance is {_wallet['balance']:.2f} cedis."}
 
 
+def top_up(amount: float):
+    if amount is None or amount <= 0:
+        return {"ok": False, "result": None, "message": "I need a valid top-up amount greater than zero."}
+    _wallet["balance"] += amount
+    return {"ok": True, "result": {"balance": round(_wallet["balance"], 2), "amount": amount},
+            "message": f"Added {amount:.2f} cedis. New balance: {_wallet['balance']:.2f} cedis."}
+
+
 def send_money(to: str, amount: float):
     to_key = (to or "").strip().lower()
     if to_key not in _wallet["contacts"]:
@@ -290,10 +298,10 @@ INTENT_TOOL = {
             "properties": {
                 "intent": {
                     "type": "string",
-                    "enum": ["check_balance", "send_money", "buy_bundle", "file_complaint", "unknown"],
+                    "enum": ["check_balance", "send_money", "buy_bundle", "top_up", "file_complaint", "unknown"],
                 },
                 "to": {"type": ["string", "null"], "description": "Recipient name for send_money"},
-                "amount": {"type": ["number", "null"], "description": "Amount in cedis, for send_money or buy_bundle"},
+                "amount": {"type": ["number", "null"], "description": "Amount in cedis, for send_money, buy_bundle, or top_up"},
                 "product": {
                     "type": ["string", "null"],
                     "description": "For buy_bundle, must be exactly one of the catalog names given in the system prompt "
@@ -310,6 +318,8 @@ SYSTEM_PROMPT = (
     "You classify customer-care voice requests for a mobile money/telco service. Callers often "
     "code-switch between English and Akan, Nigerian/Ghanaian Pidgin, or Swahili in the same sentence, "
     "and amounts/products are frequently said in English even in an otherwise local-language sentence. "
+    "'top_up' means the caller wants to ADD money to their own balance (e.g. 'reload my wallet with 50 cedis', "
+    "'top up my account', 'I want to add 20 cedis') — distinct from send_money, which sends money to someone else. "
     "For buy_bundle requests, the 'product' field must exactly match one of these catalog names, "
     "however the caller phrased it (e.g. '1 gigabyte of data', 'one gig', 'a gig of data' all mean '1gb data'): "
     + ", ".join(f"'{p}'" for p in BUNDLE_PRICES)
@@ -346,6 +356,8 @@ async def api_act(payload: dict):
         outcome = send_money(parsed.get("to"), parsed.get("amount"))
     elif intent == "buy_bundle":
         outcome = buy_bundle(parsed.get("product"), parsed.get("amount"))
+    elif intent == "top_up":
+        outcome = top_up(parsed.get("amount"))
     elif intent == "file_complaint":
         outcome = file_complaint(parsed.get("complaint_text"))
     else:
@@ -454,7 +466,7 @@ INDEX_HTML = """<!doctype html>
 <body>
 <div class="wrap">
   <h1>Sahara Pay Voice Agent</h1>
-  <p class="sub">Pick the local language you'll code-switch with English, then speak a request — e.g. "check my balance", "send 20 cedis to Ama", "buy me 1GB data". Every clip is benchmarked across three speech models before the agent acts.</p>
+  <p class="sub">Pick the local language you'll code-switch with English, then speak a request — e.g. "check my balance", "send 20 cedis to Ama", "buy me 1GB data", "top up my wallet with 50 cedis". Every clip is benchmarked across three speech models before the agent acts.</p>
 
   <div class="card">
     <div class="record-row">
@@ -464,7 +476,7 @@ INDEX_HTML = """<!doctype html>
         <option value="sw">Swahili</option>
       </select>
       <button id="recordBtn">Start Recording</button>
-      <button id="resetBtn">Reset Wallet</button>
+      <button id="resetBtn" title="Wipes the wallet back to the starting demo balance — for testing between takes, not something a real user would do">Reset Wallet (demo only)</button>
       <span id="status">Idle</span>
     </div>
   </div>
