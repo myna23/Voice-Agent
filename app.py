@@ -21,6 +21,7 @@ and it's free to run.
 """
 
 import asyncio
+import difflib
 import json
 import os
 import tempfile
@@ -129,9 +130,15 @@ def top_up(amount: float):
 def send_money(to: str, amount: float):
     to_key = (to or "").strip().lower()
     if to_key not in _wallet["contacts"]:
-        return {"ok": False, "result": None,
-                "message": f"I don't recognize '{to}' as a contact. Known contacts: "
-                + ", ".join(n.title() for n in _wallet["contacts"])}
+        # STT rarely spells a name exactly right ("Amah" for "Ama", "Emma" for
+        # "Ama") — fuzzy-match against known contacts before rejecting outright.
+        close = difflib.get_close_matches(to_key, _wallet["contacts"].keys(), n=1, cutoff=0.6)
+        if close:
+            to_key = close[0]
+        else:
+            return {"ok": False, "result": None,
+                    "message": f"I don't recognize '{to}' as a contact. Known contacts: "
+                    + ", ".join(n.title() for n in _wallet["contacts"])}
     if amount is None or amount <= 0:
         return {"ok": False, "result": None, "message": "I need a valid amount greater than zero."}
     if amount > _wallet["balance"]:
