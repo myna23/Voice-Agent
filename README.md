@@ -14,6 +14,18 @@ agent that transcribes these mixed requests and **actually completes the
 transaction** — check balance, send money, buy an airtime/data bundle, or log
 a complaint — rather than just producing a transcript.
 
+This isn't a niche audience. Akan is spoken by roughly 80% of Ghana's
+population as a first or second language
+([Wikipedia, citing Ghana Statistical Service census data](https://en.wikipedia.org/wiki/Akan_language));
+West African Pidgin has an estimated 75-140 million speakers across Nigeria,
+Ghana, and Cameroon
+([Wikipedia, citing Ethnologue](https://en.wikipedia.org/wiki/West_African_Pidgin_English));
+and Swahili has 150-200 million speakers across East Africa, official in
+Tanzania, Kenya, Uganda, Rwanda, and the DRC
+([Wikipedia](https://en.wikipedia.org/wiki/Swahili)). All three are
+underserved by mainstream voice AI trained mostly on high-resource
+languages — exactly the gap this challenge exists to close.
+
 ## How it works
 
 1. **Pick a language** (Akan / Pidgin / Swahili) and **record** a spoken request in the browser.
@@ -27,7 +39,8 @@ a complaint — rather than just producing a transcript.
    backend then **executes** it against an in-memory mock wallet.
 4. **Confirm**: a natural-language confirmation is shown, with an optional
    spoken confirmation via Sahara TTS (feature-flagged, falls back to
-   text-only if TTS isn't ready in time).
+   text-only if TTS isn't ready in time). Sahara TTS has no Akan voice yet —
+   Pidgin and Swahili get spoken confirmations, Akan stays text-only.
 
 Only the Sahara calls cost anything — STT baseline #2 and the agent LLM both
 run on Groq's free tier via the OpenAI-compatible `openai` SDK pointed at

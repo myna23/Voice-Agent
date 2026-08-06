@@ -42,15 +42,18 @@ TTS_TIMEOUT_SECONDS = float(os.environ.get("TTS_TIMEOUT_SECONDS", "8"))
 
 INTRON_BASE_URL = "https://infer.voice.intron.io"
 
-# Sahara language code -> (display name, Whisper ISO-639-1 hint or None).
+# Sahara language code -> display name, Whisper ISO-639-1 hint (STT), and
+# Sahara TTS accent (per docs.voice.intron.io/docs/tts/supported-languages-and-accents).
 # Whisper's training set doesn't include Akan or Pidgin as distinct languages,
 # so we don't pass a language hint for those — Groq/local Whisper will guess,
 # which is expected to perform worse than Sahara. That contrast is the point
 # of the benchmark. Swahili IS a Whisper-supported language, so we hint it.
+# Sahara TTS has no Akan voice at all (confirmed against their docs), so
+# tts_accent is None there — /api/tts skips the call rather than guessing.
 LANGUAGES = {
-    "ak": {"name": "Akan", "whisper_hint": None},
-    "pcm": {"name": "Pidgin", "whisper_hint": None},
-    "sw": {"name": "Swahili", "whisper_hint": "sw"},
+    "ak": {"name": "Akan", "whisper_hint": None, "tts_accent": None},
+    "pcm": {"name": "Pidgin", "whisper_hint": None, "tts_accent": "pidgin"},
+    "sw": {"name": "Swahili", "whisper_hint": "sw", "tts_accent": "swahili"},
 }
 
 app = FastAPI(title="Sahara Pay Voice Agent")
@@ -386,12 +389,18 @@ async def api_tts(payload: dict):
     if not text or not INTRON_API_KEY:
         return JSONResponse({"ok": False, "reason": "missing_text_or_key"})
 
+    tts_accent = LANGUAGES[lang]["tts_accent"]
+    if not tts_accent:
+        # Sahara has no TTS voice for this language (e.g. Akan) — skip the call
+        # rather than sending a guessed accent value that's guaranteed to fail.
+        return JSONResponse({"ok": False, "reason": "tts_unsupported_for_language"})
+
     try:
         async with httpx.AsyncClient(timeout=10) as client:
             enqueue = await client.post(
                 f"{INTRON_BASE_URL}/tts/v1/enqueue",
                 headers={"Authorization": f"Bearer {INTRON_API_KEY}", "Content-Type": "application/json"},
-                json={"text": text, "voice_language": lang, "voice_accent": LANGUAGES[lang]["name"].lower(),
+                json={"text": text, "voice_language": lang, "voice_accent": tts_accent,
                       "voice_gender": "female"},
             )
             enqueue.raise_for_status()
