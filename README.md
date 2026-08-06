@@ -1,7 +1,7 @@
 # Sahara Pay Voice Agent
 
 Built for the **MLC (Africa) × Intron Agentic Voice AI Challenge**, Deep Learning Indaba 2026.
-Category: **Fintech, Telco & Customer Experience**. Code-switching languages: **Akan, Pidgin, and Swahili — English mixed with a user-selected local language.**
+Category: **Fintech, Telco & Customer Experience** — specifically **voice banking**, **payments**, and **call-center triage**, three of the category's named use cases (the challenge also lists KYC, collections, and agent-assist, which are out of scope for this build). Code-switching languages: **Akan, Pidgin, and Swahili — English mixed with a user-selected local language.**
 
 ## Problem & target users
 
@@ -11,8 +11,10 @@ especially numbers, amounts, and product names ("me pɛ sɛ me send 50 cedis kɔ
 Ama"). Speech systems built for clean, monolingual audio break down exactly
 where they're needed most: real customer requests. Sahara Pay is a voice
 agent that transcribes these mixed requests and **actually completes the
-transaction** — check balance, send money, buy an airtime/data bundle, or log
-a complaint — rather than just producing a transcript.
+transaction**, spanning three real customer-experience workflows in one
+agent: **voice banking** (check balance, top up), **payments** (send money,
+buy an airtime/data bundle), and **call-center triage** (log a complaint) —
+rather than just producing a transcript.
 
 This isn't a niche audience. Akan is spoken by roughly 80% of Ghana's
 population as a first or second language
