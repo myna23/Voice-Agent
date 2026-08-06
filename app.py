@@ -492,7 +492,7 @@ INDEX_HTML = """<!doctype html>
 <body>
 <div class="wrap">
   <h1>Sahara Pay Voice Agent</h1>
-  <p class="sub">Pick the local language you'll code-switch with English, then speak a request — e.g. "check my balance", "send 20 cedis to Ama", "buy me 1GB data", "top up my wallet with 50 cedis". Every clip is benchmarked across three speech models before the agent acts.</p>
+  <p class="sub">Pick the local language you'll code-switch with English, then speak a request — e.g. "check my balance", "send 20 cedis to Ama", "buy me 1GB data", "top up my wallet with 50 cedis", "I want to file a complaint about my network". Every clip is benchmarked across three speech models before the agent acts.</p>
 
   <div class="card">
     <div class="record-row">
