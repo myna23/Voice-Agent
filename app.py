@@ -467,8 +467,18 @@ INDEX_HTML = """<!doctype html>
   .action-result { font-size:0.95rem; line-height:1.5; }
   .action-result.ok { color:var(--ok); }
   .action-result.err { color:var(--err); }
-  pre.wallet { background:#0e141b; border:1px solid var(--border); border-radius:8px; padding:0.75rem; font-size:0.8rem; overflow-x:auto; }
   .hint { color:var(--muted); font-size:0.82rem; }
+  .balance-stat { display:flex; align-items:baseline; gap:0.4rem; margin-bottom:1rem; }
+  .balance-stat .amount { font-size:2.2rem; font-weight:700; }
+  .balance-stat .unit { color:var(--muted); font-size:0.95rem; }
+  .wallet-section { margin-bottom:0.9rem; }
+  .wallet-section h4 { margin:0 0 0.4rem; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.03em; color:var(--muted); font-weight:600; }
+  .chip-row { display:flex; flex-wrap:wrap; gap:0.5rem; }
+  .chip { background:#0e141b; border:1px solid var(--border); border-radius:999px; padding:0.3rem 0.75rem; font-size:0.85rem; }
+  .chip.zero { color:var(--muted); }
+  .chip .chip-amt { color:var(--accent); font-weight:600; margin-left:0.35rem; }
+  .empty-note { color:var(--muted); font-size:0.85rem; font-style:italic; }
+  .complaint-item { background:#0e141b; border:1px solid var(--border); border-radius:8px; padding:0.5rem 0.75rem; font-size:0.85rem; margin-bottom:0.4rem; }
   audio { width:100%; margin-top:0.5rem; }
 </style>
 </head>
@@ -503,7 +513,7 @@ INDEX_HTML = """<!doctype html>
 
   <div class="card">
     <h2 style="margin-top:0;font-size:1rem;">Wallet state</h2>
-    <pre class="wallet" id="walletState">Not loaded yet.</pre>
+    <div id="walletPanel"><p class="hint">Not loaded yet.</p></div>
     <p class="hint">Mock data only — no real money moves. See ETHICS.md.</p>
   </div>
 </div>
@@ -518,11 +528,40 @@ const enginesEl = document.getElementById('engines');
 const actionCard = document.getElementById('actionCard');
 const actionResultEl = document.getElementById('actionResult');
 const ttsAudio = document.getElementById('ttsAudio');
-const walletStateEl = document.getElementById('walletState');
+const walletPanelEl = document.getElementById('walletPanel');
 
 let mediaRecorder, chunks = [], recording = false;
 
 function setStatus(text) { statusEl.textContent = text; }
+
+function renderWallet(wallet) {
+  const contacts = Object.entries(wallet.contacts || {});
+  const sentTo = contacts.filter(([, amt]) => amt > 0);
+  const bundles = wallet.bundles || [];
+  const complaints = wallet.complaints || [];
+
+  let html = `<div class="balance-stat"><span class="amount">${wallet.balance.toFixed(2)}</span><span class="unit">cedis</span></div>`;
+
+  html += '<div class="wallet-section"><h4>Sent to</h4>';
+  html += sentTo.length
+    ? `<div class="chip-row">${sentTo.map(([name, amt]) => `<span class="chip">${escapeHtml(name)}<span class="chip-amt">${amt.toFixed(2)}</span></span>`).join('')}</div>`
+    : '<p class="empty-note">No transfers yet</p>';
+  html += '</div>';
+
+  html += '<div class="wallet-section"><h4>Bundles</h4>';
+  html += bundles.length
+    ? `<div class="chip-row">${bundles.map((b) => `<span class="chip">${escapeHtml(b)}</span>`).join('')}</div>`
+    : '<p class="empty-note">None purchased yet</p>';
+  html += '</div>';
+
+  html += '<div class="wallet-section"><h4>Complaints</h4>';
+  html += complaints.length
+    ? complaints.map((c) => `<div class="complaint-item">${escapeHtml(c)}</div>`).join('')
+    : '<p class="empty-note">None filed</p>';
+  html += '</div>';
+
+  walletPanelEl.innerHTML = html;
+}
 
 recordBtn.addEventListener('click', async () => {
   if (!recording) {
@@ -555,7 +594,7 @@ recordBtn.addEventListener('click', async () => {
 
 resetBtn.addEventListener('click', async () => {
   const resp = await fetch('/api/reset', { method: 'POST' });
-  walletStateEl.textContent = JSON.stringify(await resp.json(), null, 2);
+  renderWallet(await resp.json());
   actionCard.style.display = 'none';
   enginesCard.style.display = 'none';
   setStatus('Wallet reset.');
@@ -619,7 +658,7 @@ function renderAction(data) {
   actionResultEl.className = 'action-result ' + (data.ok ? 'ok' : 'err');
   actionResultEl.textContent = data.message || '(no response)';
   if (data.wallet) {
-    walletStateEl.textContent = JSON.stringify(data.wallet, null, 2);
+    renderWallet(data.wallet);
   }
   maybePlayTts(data.message);
 }
@@ -653,7 +692,7 @@ function escapeHtml(str) {
 
 fetch('/api/reset', { method: 'POST' })
   .then((r) => r.json())
-  .then((data) => { walletStateEl.textContent = JSON.stringify(data, null, 2); });
+  .then(renderWallet);
 </script>
 </body>
 </html>
