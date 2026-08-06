@@ -95,6 +95,16 @@ _wallet = {
     "complaints": [],
 }
 
+# Cosmetic only — display numbers for the contact directory, spanning the
+# app's three language regions (Ghana, Nigeria, Kenya). Not used in any
+# transfer logic, which keys purely on the name in _wallet["contacts"].
+CONTACT_PHONES = {
+    "ama": "+233 24 123 4567",
+    "kofi": "+233 20 234 5678",
+    "chidi": "+234 803 345 6789",
+    "amina": "+254 712 456 789",
+}
+
 
 def wallet_reset():
     _wallet["balance"] = STARTING_BALANCE
@@ -109,6 +119,7 @@ def wallet_snapshot():
     return {
         "balance": round(_wallet["balance"], 2),
         "contacts": dict(_wallet["contacts"]),
+        "contact_phones": dict(CONTACT_PHONES),
         "bundles": list(_wallet["bundles"]),
         "complaints": list(_wallet["complaints"]),
     }
@@ -544,10 +555,17 @@ function setStatus(text) { statusEl.textContent = text; }
 function renderWallet(wallet) {
   const contacts = Object.entries(wallet.contacts || {});
   const sentTo = contacts.filter(([, amt]) => amt > 0);
+  const phones = wallet.contact_phones || {};
   const bundles = wallet.bundles || [];
   const complaints = wallet.complaints || [];
 
   let html = `<div class="balance-stat"><span class="amount">${wallet.balance.toFixed(2)}</span><span class="unit">cedis</span></div>`;
+
+  html += '<div class="wallet-section"><h4>Contacts</h4>';
+  html += contacts.length
+    ? `<div class="chip-row">${contacts.map(([name]) => `<span class="chip">${escapeHtml(name.charAt(0).toUpperCase() + name.slice(1))}<span class="chip-amt">${escapeHtml(phones[name] || '')}</span></span>`).join('')}</div>`
+    : '<p class="empty-note">No contacts</p>';
+  html += '</div>';
 
   html += '<div class="wallet-section"><h4>Sent to</h4>';
   html += sentTo.length
